@@ -1,4 +1,4 @@
-# game.py
+import random
 from cards import *
 from logger import Logger
 
@@ -20,17 +20,13 @@ def card_value(card, trump, lead_suit):
         elif same_color[card.suit] == trump:
             return 199  # Left Bower
 
-    # Trump suit cards (other than bowers)
     if card.suit == trump:
         return 100 + order.index(card.rank)
 
-    # Led suit cards (non-trump)
     elif card.suit == lead_suit:
         return 10 + order.index(card.rank)
 
-    # Off-suit, non-trump cards
-    else:
-        return 0
+    return 0
 
 class Round:
     def __init__(self, players, dealer_index, logger=None):
@@ -39,6 +35,7 @@ class Round:
         self.logger = logger or Logger()
         self.trump = None
         self.declaring_team = None
+        self.trump_chooser = None
 
     def choose_trump(self, kitty):
         upcard = kitty[0]
@@ -61,41 +58,44 @@ class Round:
                     dealer = self.players[self.dealer_index]
 
                     if can_pick:
-                        # ROUND 1: upcard suit is accepted (dealer must pick it up)
+                        # ROUND 1 — ordering up
                         self.trump = upcard.suit
                         self.declaring_team = p.team
+                        self.trump_chooser = p
 
-                        # Dealer picks up upcard
+                        self.logger.log_order_up(p, dealer)
+
+                        # Dealer picks up card
                         dealer.hand.append(upcard)
 
-                        # Dealer discards one card (for now, random)
                         import random
                         discard = random.choice(dealer.hand)
                         dealer.hand.remove(discard)
 
-                        self.logger.lines.append(
-                            f"{dealer.name} picks up [{upcard.short()}] and discards [{discard.short()}]"
-                        )
+                        self.logger.log_pickup_and_discard(dealer, upcard, discard)
 
                     else:
-                        # ROUND 2: someone chooses a new trump suit (dealer doesn't pick up)
+                        # ROUND 2 — calling trump
                         self.trump = suit
                         self.declaring_team = p.team
+                        self.trump_chooser = p
 
-                    self.logger.log_trump(self.trump, p, p.team)
+                        self.logger.log_call_trump(p, suit)
+
+                    self.logger.log_final_trump(self.trump, self.trump_chooser)
                     return
 
             can_pick = False  # move to second round
 
-        # If everyone passes both rounds, dealer must choose
-        import random
+        # TODO: fix this so when dealer is screwed they have to choose
         dealer = self.players[self.dealer_index]
         suits = [s for s in SUITS if s != forbidden_suit]
         self.trump = random.choice(suits)
         self.declaring_team = dealer.team
-        self.logger.log_trump(self.trump, dealer, dealer.team)
+        self.trump_chooser = dealer
 
-
+        self.logger.log_forced_trump(dealer, self.trump)
+        self.logger.log_final_trump(self.trump, dealer)
 
     def play_trick(self, leader_index):
         trick = []
@@ -107,6 +107,7 @@ class Round:
             if not lead_card:
                 lead_card = card
             self.logger.log_card_played(p, card)
+
         winner = max(trick, key=lambda pc: card_value(pc[1], self.trump, lead_card.suit))
         self.logger.log_trick_winner(winner[0], winner[1])
         return self.players.index(winner[0])

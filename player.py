@@ -24,7 +24,7 @@ class Player:
 # Example simple AI
 class RandomAgent(Player):
     def choose_trump(self, upcard, can_pick, forbidden_suit=None):
-        if random.random() < 0.3:
+        if random.random() < 0.1:
             return True, upcard.suit
         elif not can_pick and random.random() < 0.3:
             suits = [s for s in ["Hearts","Diamonds","Clubs","Spades"] if s != forbidden_suit]

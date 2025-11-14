@@ -1,5 +1,5 @@
-# logger.py
 from datetime import datetime
+from cards import SUIT_SYMBOLS
 
 class Logger:
     def __init__(self, filename=None):
@@ -15,12 +15,29 @@ class Logger:
         for p in hands:
             hand_str = " ".join([c.short() for c in p.hand])
             self.lines.append(f"{p.name} hand: [{hand_str}]")
+        self.lines.append("")  # blank line before bidding
 
-    def log_trump(self, trump, chooser, team):
-        self.lines.append(f"\nTrump chosen: {trump} (by {chooser.name}, Team {team})")
+    # --- NEW LOGGING METHODS ---
 
-    def start_trick(self, trick_num):
-        self.lines.append(f"\nTrick {trick_num}:")
+    def log_order_up(self, chooser, dealer):
+        self.lines.append(f"{chooser.name} orders up {dealer.name}")
+
+    def log_pickup_and_discard(self, dealer, upcard, discard):
+        self.lines.append(f"{dealer.name} picks up [{upcard.short()}] and discards [{discard.short()}]")
+
+    def log_call_trump(self, chooser, suit):
+        symbol = SUIT_SYMBOLS[suit]
+        self.lines.append(f"{chooser.name} calls {symbol} as trump")
+
+    def log_forced_trump(self, dealer, suit):
+        symbol = SUIT_SYMBOLS[suit]
+        self.lines.append(f"Dealer {dealer.name} chooses {symbol} as trump")
+
+    def log_final_trump(self, suit, chooser):
+        symbol = SUIT_SYMBOLS[suit]
+        self.lines.append(f"Trump: {symbol} (chosen by {chooser.name})\n")
+
+    # --- Existing trick logging below ---
 
     def log_card_played(self, player, card):
         self.lines.append(f"  {player.name} plays {card.short()}")
@@ -31,9 +48,9 @@ class Logger:
     def log_round_end(self, tricks, declaring_team, scores):
         self.lines.append("\nRound result:")
         for team, tcount in tricks.items():
-            self.lines.append(f"  Team {team}: {tcount} tricks")
-        self.lines.append(f"  Declaring team: Team {declaring_team}")
-        self.lines.append(f"  Scores => Team 0: {scores[0]}, Team 1: {scores[1]}")
+            self.lines.append(f"  Team {team}:         {tcount} tricks")
+        self.lines.append(f"  Called By:      Team {declaring_team}")
+        self.lines.append(f"  Scores:         Team 0: {scores[0]}, Team 1: {scores[1]}")
 
     def save(self):
         with open(self.filename, "w") as f:
