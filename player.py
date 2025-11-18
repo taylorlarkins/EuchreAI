@@ -1,5 +1,7 @@
 # player.py
 import random
+from cards import SUITS
+from game import card_value
 
 class Player:
     def __init__(self, name, team):
@@ -9,24 +11,55 @@ class Player:
 
     def set_hand(self, cards):
         self.hand = cards
+    
+    def get_suit_counts(self):
+        suit_counts = {s: 0 for s in SUITS}
+        for card in self.hand:
+            suit_counts[card.suit] += 1
+        return suit_counts
 
-    def choose_trump(self, upcard, can_pick, forbidden_suit=None):
-        """Return (bool, suit) — True to order up, or pick a suit in 2nd round."""
-        return False, None  # Always pass by default
+    # Override the following methods to create an agent
+    def choose_trump(self, upcard, first_round, forbidden_suit=None):
+        if first_round:
+            return (True, upcard.suit) if random.random() < 0.5 else (False, None)
+        return (True, random.choice([s for s in SUITS if s != forbidden_suit])) if random.random() < 0.5 else (False, None)
 
-    def play_card(self, trick, lead_suit, trump):
-        """Return the card the player plays."""
+    def play_card(self, trick, out_of_play, lead_suit, trump):
         playable = [c for c in self.hand if c.suit == lead_suit] or self.hand
-        chosen = random.choice(playable)
-        self.hand.remove(chosen)
-        return chosen
-
-# Example simple AI
-class RandomAgent(Player):
-    def choose_trump(self, upcard, can_pick, forbidden_suit=None):
-        if random.random() < 0.1:
-            return True, upcard.suit
-        elif not can_pick and random.random() < 0.3:
-            suits = [s for s in ["Hearts","Diamonds","Clubs","Spades"] if s != forbidden_suit]
-            return True, random.choice(suits)
-        return False, None
+        return random.choice(playable)
+    
+    def forced_choose_trump(self, options):
+        return random.choice(options)
+    
+    def discard(self, out_of_play, trump):
+        return random.choice(self.hand)
+    
+class PlayBestCard(Player):
+    def choose_trump(self, upcard, first_round, forbidden_suit=None):
+        suit_counts = self.get_suit_counts()
+        if first_round:
+            if suit_counts[upcard.suit] >= 3:
+                return (True, upcard.suit)
+            return (False, None)
+        del suit_counts[upcard.suit]
+        for suit in suit_counts.keys():
+            if suit_counts[suit] >= 3:
+                return (True, suit)
+        return (False, None)
+        
+    def play_card(self, trick, out_of_play, lead_suit, trump):
+        playable = [c for c in self.hand if c.suit == lead_suit] or self.hand
+        playable.sort(key=lambda x: card_value(x, trump, lead_suit), reverse=True)
+        return playable[0]
+    
+    def forced_choose_trump(self, options):
+        suit_counts = self.get_suit_counts()
+        return max(suit_counts, key=suit_counts.get)
+    
+    def discard(self, out_of_play, trump):
+        sorted_hand = sorted(self.hand, key=lambda x: x.rank)
+        for card in sorted_hand:
+            if card.suit != trump:
+                return card
+        return sorted_hand[0]
+        
