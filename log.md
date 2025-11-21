@@ -20,9 +20,14 @@
     <td align="left">Fixed up engine bugs, started first agent design</td>
     <td align="center">1.5</td>
   </tr>
+  <tr>
+    <td align="left">11/20</td>
+    <td align="left">Research, agent implementation</td>
+    <td align="center">2.7</td>
+  </tr>
    <tr>
     <td align="left"><b>TOTAL</b></td>
     <td align="left"></td>
-    <td align="center"><b>3.8</b></td>
+    <td align="center"><b>6.5</b></td>
   </tr>
 </table>

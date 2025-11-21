@@ -1,11 +1,12 @@
 from cards import Deck
 from game import Round
+import random
 
 class GameEngine:
     def __init__(self, players, logger=None):
         self.players = players
         self.scores = {0: 0, 1: 0}
-        self.dealer_index = 0
+        self.dealer_index = random.randint(0, 3) # pick a random player to start as dealer
         self.logger = logger
         self.round_counter = 1
 

@@ -40,12 +40,11 @@ class Round:
     def choose_trump(self, kitty):
         upcard = kitty[0]
         first_round = True
-        forbidden_suit = upcard.suit
 
         for _ in range(2):
             for i in range(4):
                 p = self.players[(self.dealer_index + 1 + i) % 4]
-                pick, suit = p.choose_trump(upcard, first_round, forbidden_suit)
+                pick, suit = p.choose_trump(upcard, first_round)
 
                 if pick:
                     dealer = self.players[self.dealer_index]
@@ -60,7 +59,7 @@ class Round:
 
                         # Dealer picks up card
                         dealer.hand.append(upcard)
-                        discard = dealer.discard(self.out_of_play, self.trump)
+                        discard = dealer.discard(self.trump)
                         dealer.hand.remove(discard)
 
                         self.logger.log_pickup_and_discard(dealer, upcard, discard)
@@ -79,8 +78,7 @@ class Round:
             self.out_of_play.append(upcard) # upcard is flipped over
 
         dealer = self.players[self.dealer_index]
-        suits = [s for s in SUITS if s != forbidden_suit]
-        self.trump = dealer.forced_choose_trump(suits)
+        self.trump = dealer.forced_choose_trump(upcard.suit)
         self.declaring_team = dealer.team
         self.trump_chooser = dealer
 

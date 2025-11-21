@@ -1,9 +1,11 @@
 from datetime import datetime
 from cards import SUIT_SYMBOLS
+import os
 
 class Logger:
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, directory=None):
         self.filename = filename or f"euchre_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        self.directory = directory
         self.lines = []
         self.round_number = 0
 
@@ -16,8 +18,6 @@ class Logger:
             hand_str = " ".join([c.short() for c in p.hand])
             self.lines.append(f"{p.name} hand: [{hand_str}]")
         self.lines.append("")  # blank line before bidding
-
-    # --- NEW LOGGING METHODS ---
 
     def log_order_up(self, chooser, dealer):
         self.lines.append(f"{chooser.name} orders up {dealer.name}")
@@ -37,8 +37,6 @@ class Logger:
         symbol = SUIT_SYMBOLS[suit]
         self.lines.append(f"Trump: {symbol} (chosen by {chooser.name})\n")
 
-    # --- Existing trick logging below ---
-
     def log_card_played(self, player, card):
         self.lines.append(f"  {player.name} plays {card.short()}")
 
@@ -53,6 +51,11 @@ class Logger:
         self.lines.append(f"  Scores:         Team 0: {scores[0]}, Team 1: {scores[1]}")
 
     def save(self):
-        with open(self.filename, "w") as f:
+        if self.directory is None:
+            filepath = self.filename
+        else:
+            os.makedirs(self.directory, exist_ok=True)
+            filepath = os.path.join(self.directory, self.filename)
+
+        with open(filepath, "w") as f:
             f.write("\n".join(self.lines))
-        print(f"Log saved to {self.filename}")
