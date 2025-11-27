@@ -1,4 +1,3 @@
-# cards.py
 import random
 
 SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"]

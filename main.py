@@ -4,7 +4,7 @@ from logger import Logger
 from datetime import datetime
 import os
 
-def competition(P1: Player, P2: Player, P3: Player, P4: Player, game_count: int, directory=None, logs=True):
+def competition(P1: Player, P2: Player, P3: Player, P4: Player, game_count: int, fdpu=False, directory=None, logs=True):
     print(f"Playing {game_count} games...", end="")
     game_nbr = 1
     points = {0: 0, 1: 0}
@@ -12,12 +12,12 @@ def competition(P1: Player, P2: Player, P3: Player, P4: Player, game_count: int,
     for _ in range(game_count):
         logger = Logger(filename=f"game{game_nbr}-{datetime.now().strftime('%m-%d-%y-%I:%M%p')}.txt", directory=directory)
         players = [
-            P1("P1", team=0),
-            P2("P2", team=1),
-            P3("P3", team=0),
-            P4("P4", team=1)
+            P1(1, 3, team=0),
+            P2(2, 4, team=1),
+            P3(3, 1, team=0),
+            P4(4, 2, team=1)
         ]
-        engine = GameEngine(players, logger)
+        engine = GameEngine(players, fdpu, logger)
         engine.play_game()
         for team, score in engine.scores.items():
             if score >= 10: wins[team] += 1
@@ -43,4 +43,4 @@ def competition(P1: Player, P2: Player, P3: Player, P4: Player, game_count: int,
     
     
 if __name__ == "__main__":
-    competition(HighCard, Random, LowCard, Random, 1000, "Logs/Test1", logs=False)
+    competition(HighValue, Player, HighValue, Player, 30, fdpu=False, directory="Logs/Test1", logs=True)

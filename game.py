@@ -1,6 +1,7 @@
 from cards import *
 from logger import Logger
 
+# Consider improving this valuation
 def card_value(card, trump, lead_suit):
     """Returns a numerical value for comparing cards."""
     order = ["9", "10", "J", "Q", "K", "A"]
@@ -25,12 +26,13 @@ def card_value(card, trump, lead_suit):
     elif card.suit == lead_suit:
         return 10 + order.index(card.rank)
 
-    return 0
+    return order.index(card.rank)
 
 class Round:
-    def __init__(self, players, dealer_index, logger=None):
+    def __init__(self, players, dealer_index, force_dealer_pick_up=False, logger=None):
         self.players = players
         self.dealer_index = dealer_index
+        self.force_dealer_pick_up = force_dealer_pick_up
         self.logger = logger or Logger()
         self.trump = None
         self.declaring_team = None
@@ -41,49 +43,60 @@ class Round:
         upcard = kitty[0]
         first_round = True
 
-        for _ in range(2):
-            for i in range(4):
-                p = self.players[(self.dealer_index + 1 + i) % 4]
-                pick, suit = p.choose_trump(upcard, first_round)
+        if not self.force_dealer_pick_up:
+            for _ in range(2):
+                for i in range(4):
+                    p = self.players[(self.dealer_index + 1 + i) % 4]
+                    pick, suit = p.choose_trump(upcard, first_round)
 
-                if pick:
-                    dealer = self.players[self.dealer_index]
+                    if pick:
+                        dealer = self.players[self.dealer_index]
+                        if first_round:
+                            # ROUND 1 — ordering up
+                            self.trump = upcard.suit
+                            self.declaring_team = p.team
+                            self.trump_chooser = p
 
-                    if first_round:
-                        # ROUND 1 — ordering up
-                        self.trump = upcard.suit
-                        self.declaring_team = p.team
-                        self.trump_chooser = p
+                            self.logger.log_order_up(p, dealer)
 
-                        self.logger.log_order_up(p, dealer)
+                            # Dealer picks up card
+                            dealer.hand.append(upcard)
+                            discard = dealer.discard(self.trump)
+                            dealer.hand.remove(discard)
 
-                        # Dealer picks up card
-                        dealer.hand.append(upcard)
-                        discard = dealer.discard(self.trump)
-                        dealer.hand.remove(discard)
+                            self.logger.log_pickup_and_discard(dealer, upcard, discard)
+                        else:
+                            # ROUND 2 — calling trump
+                            self.trump = suit
+                            self.declaring_team = p.team
+                            self.trump_chooser = p
+                            self.logger.log_call_trump(p, suit)
 
-                        self.logger.log_pickup_and_discard(dealer, upcard, discard)
+                        self.logger.log_final_trump(self.trump, self.trump_chooser)
+                        return
+                first_round = False  # move to second round
+                self.out_of_play.append(upcard) # upcard is flipped over
 
-                    else:
-                        # ROUND 2 — calling trump
-                        self.trump = suit
-                        self.declaring_team = p.team
-                        self.trump_chooser = p
-                        self.logger.log_call_trump(p, suit)
+            dealer = self.players[self.dealer_index]
+            self.trump = dealer.forced_choose_trump(upcard.suit)
+            self.declaring_team = dealer.team
+            self.trump_chooser = dealer
 
-                    self.logger.log_final_trump(self.trump, self.trump_chooser)
-                    return
+            self.logger.log_forced_trump(dealer, self.trump)
+            self.logger.log_final_trump(self.trump, dealer)
+        else:
+            dealer = self.players[self.dealer_index]
+            self.trump = upcard.suit
+            self.declaring_team = dealer.team
+            self.trump_chooser = dealer
 
-            first_round = False  # move to second round
-            self.out_of_play.append(upcard) # upcard is flipped over
+            self.logger.log_order_up(dealer, dealer)
 
-        dealer = self.players[self.dealer_index]
-        self.trump = dealer.forced_choose_trump(upcard.suit)
-        self.declaring_team = dealer.team
-        self.trump_chooser = dealer
+            dealer.hand.append(upcard)
+            discard = dealer.discard(self.trump)
+            dealer.hand.remove(discard)
 
-        self.logger.log_forced_trump(dealer, self.trump)
-        self.logger.log_final_trump(self.trump, dealer)
+            self.logger.log_pickup_and_discard(dealer, upcard, discard)
 
     def play_trick(self, leader_index):
         trick = []

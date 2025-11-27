@@ -3,8 +3,9 @@ from game import Round
 import random
 
 class GameEngine:
-    def __init__(self, players, logger=None):
+    def __init__(self, players, force_dealer_pick_up=False, logger=None):
         self.players = players
+        self.force_dealer_pick_up = force_dealer_pick_up
         self.scores = {0: 0, 1: 0}
         self.dealer_index = random.randint(0, 3) # pick a random player to start as dealer
         self.logger = logger
@@ -22,7 +23,7 @@ class GameEngine:
         for i, p in enumerate(self.players):
             p.set_hand(hands[i])
 
-        rnd = Round(self.players, self.dealer_index, logger=self.logger)
+        rnd = Round(self.players, self.dealer_index, self.force_dealer_pick_up, logger=self.logger)
 
         self.logger.start_round(
             self.round_counter,

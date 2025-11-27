@@ -25,9 +25,14 @@
     <td align="left">Research, agent implementation</td>
     <td align="center">2.7</td>
   </tr>
+  <tr>
+    <td align="left">11/27</td>
+    <td align="left">Restructuring and beginnings of complex agent implementation</td>
+    <td align="center">2.0</td>
+  </tr>
    <tr>
     <td align="left"><b>TOTAL</b></td>
     <td align="left"></td>
-    <td align="center"><b>6.5</b></td>
+    <td align="center"><b>8.5</b></td>
   </tr>
 </table>

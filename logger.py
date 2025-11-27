@@ -12,36 +12,36 @@ class Logger:
     def start_round(self, round_num, dealer, hands, upcard):
         self.round_number = round_num
         self.lines.append(f"\n--- ROUND #{round_num} ---")
-        self.lines.append(f"Dealer: {dealer.name}")
+        self.lines.append(f"Dealer: P{dealer.nbr}")
         self.lines.append(f"Upcard: {upcard.short()}")
         for p in hands:
             hand_str = " ".join([c.short() for c in p.hand])
-            self.lines.append(f"{p.name} hand: [{hand_str}]")
+            self.lines.append(f"P{p.nbr} hand: [{hand_str}]")
         self.lines.append("")  # blank line before bidding
 
     def log_order_up(self, chooser, dealer):
-        self.lines.append(f"{chooser.name} orders up {dealer.name}")
+        self.lines.append(f"P{chooser.nbr} orders up P{dealer.nbr}")
 
     def log_pickup_and_discard(self, dealer, upcard, discard):
-        self.lines.append(f"{dealer.name} picks up [{upcard.short()}] and discards [{discard.short()}]")
+        self.lines.append(f"P{dealer.nbr} picks up [{upcard.short()}] and discards [{discard.short()}]")
 
     def log_call_trump(self, chooser, suit):
         symbol = SUIT_SYMBOLS[suit]
-        self.lines.append(f"{chooser.name} calls {symbol} as trump")
+        self.lines.append(f"P{chooser.nbr} calls {symbol} as trump")
 
     def log_forced_trump(self, dealer, suit):
         symbol = SUIT_SYMBOLS[suit]
-        self.lines.append(f"Dealer {dealer.name} chooses {symbol} as trump")
+        self.lines.append(f"Dealer P{dealer.nbr} chooses {symbol} as trump")
 
     def log_final_trump(self, suit, chooser):
         symbol = SUIT_SYMBOLS[suit]
-        self.lines.append(f"Trump: {symbol} (chosen by {chooser.name})\n")
+        self.lines.append(f"Trump: {symbol} (chosen by P{chooser.nbr})\n")
 
     def log_card_played(self, player, card):
-        self.lines.append(f"  {player.name} plays {card.short()}")
+        self.lines.append(f"  P{player.nbr} plays {card.short()}")
 
     def log_trick_winner(self, player, card):
-        self.lines.append(f"  Winner: {player.name} ({card.short()})")
+        self.lines.append(f"  Winner: P{player.nbr} ({card.short()})")
 
     def log_round_end(self, tricks, declaring_team, scores):
         self.lines.append("\nRound result:")
