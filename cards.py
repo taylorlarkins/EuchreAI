@@ -8,6 +8,12 @@ SUIT_SYMBOLS = {
     "Clubs": "♣",
     "Spades": "♠"
 }
+SAME_COLOR = {
+    "Hearts": "Diamonds",
+    "Diamonds": "Hearts",
+    "Clubs": "Spades",
+    "Spades": "Clubs",
+}
 
 class Card:
     def __init__(self, suit, rank):
@@ -20,6 +26,21 @@ class Card:
     def short(self):
         rank_part = self.rank if self.rank == "10" else self.rank[0]
         return f"{rank_part}{SUIT_SYMBOLS[self.suit]}"
+    
+    # Consider improving this valuation
+    def value(self, trump_suit, lead_suit):
+        """Returns a numerical value for comparing cards."""
+        order = ["9", "10", "J", "Q", "K", "A"]
+        if self.rank == "J":
+            if self.suit == trump_suit:
+                return 200
+            elif SAME_COLOR[self.suit] == trump_suit:
+                return 199
+        if self.suit == trump_suit:
+            return 100 + order.index(self.rank)
+        elif self.suit == lead_suit:
+            return 10 + order.index(self.rank)
+        return order.index(self.rank)
 
 class Deck:
     def __init__(self):

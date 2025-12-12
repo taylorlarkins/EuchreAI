@@ -30,9 +30,14 @@
     <td align="left">Restructuring and beginnings of complex agent implementation</td>
     <td align="center">2.0</td>
   </tr>
+  <tr>
+    <td align="left">12/11</td>
+    <td align="left">Complex agent, major bug fixes</td>
+    <td align="center">2.0</td>
+  </tr>
    <tr>
     <td align="left"><b>TOTAL</b></td>
     <td align="left"></td>
-    <td align="center"><b>8.5</b></td>
+    <td align="center"><b>10.5</b></td>
   </tr>
 </table>
