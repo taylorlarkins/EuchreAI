@@ -43,4 +43,4 @@ def competition(P1: Player, P2: Player, P3: Player, P4: Player, game_count: int,
     
     
 if __name__ == "__main__":
-    competition(HighValue, HighWithCaution, LowValue, HighValue, 31, fdpu=False, directory="Logs/Test1", logs=False)
+    competition(HighValue, HighWithCaution, LowValue, HighValue, 31, fdpu=False, directory="Logs/Test1", logs=True)

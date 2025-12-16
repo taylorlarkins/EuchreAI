@@ -40,9 +40,14 @@
     <td align="left">Team player agent beginnings</td>
     <td align="center">2.5</td>
   </tr>
+  <tr>
+    <td align="left">12/16</td>
+    <td align="left">More work on team player agent (chance chart)</td>
+    <td align="center">2.2</td>
+  </tr>
    <tr>
     <td align="left"><b>TOTAL</b></td>
     <td align="left"></td>
-    <td align="center"><b>13.0</b></td>
+    <td align="center"><b>15.2</b></td>
   </tr>
 </table>

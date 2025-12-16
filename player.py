@@ -201,20 +201,3 @@ class HighWithCaution(Player):
         if current_winner != None and current_winner != self.teammate:
             return play_lowest_winner(self, trump_suit, lead_suit, current_winning_card)
         return play_lowest_value(self, trump_suit, lead_suit)
-
-class TeamPlayer(Player):
-    def __init__(self, number, teammate, team):
-        super().__init__(number, teammate, team)
-        self.chance_chart = ChanceChart(self.nbr, [])
-
-    def choose_trump(self, upcard, first_round):
-        return choose_ge3(self, upcard, first_round)
-    
-    def forced_choose_trump(self, forbidden):
-        return forced_choose_max_suit_count(self, forbidden)
-    
-    def discard(self, trump):
-        return discard_lowest_nontrump_rank(self, trump)
-    
-    def play_card(self, trick, trump_suit, lead_suit):
-        return play_highest_value(self, trump_suit, lead_suit)
