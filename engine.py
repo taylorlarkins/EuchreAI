@@ -22,6 +22,7 @@ class GameEngine:
         hands, kitty = deck.deal()
         for i, p in enumerate(self.players):
             p.set_hand(hands[i])
+            p.reset()
 
         rnd = Round(self.players, self.dealer_index, self.force_dealer_pick_up, logger=self.logger)
 

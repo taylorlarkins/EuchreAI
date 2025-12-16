@@ -1,4 +1,5 @@
 import random
+import itertools
 from cards import *
 class Player:
     def __init__(self, number: int, teammate: int, team: int):
@@ -28,6 +29,10 @@ class Player:
             if p == self.teammate:
                 return card
         return None
+
+    # Agents may use this function to perform actions after receiving their hand
+    def reset():
+        pass
 
     # Override the following methods to create an agent
 
@@ -201,3 +206,82 @@ class HighWithCaution(Player):
         if current_winner != None and current_winner != self.teammate:
             return play_lowest_winner(self, trump_suit, lead_suit, current_winning_card)
         return play_lowest_value(self, trump_suit, lead_suit)
+    
+class MonteCarlo(Player):
+    def __init__(self, number, teammate, team):
+        super().__init__(number, teammate, team)
+        self.other_cards = list(itertools.product(SUITS, RANKS))
+
+    def reset(self):
+        for card in self.hand:
+            self.other_cards.remove((card.suit, card.rank))
+    
+    def choose_trump(self, upcard, first_round):
+        return choose_ge3(self, upcard, first_round)
+    
+    def forced_choose_trump(self, forbidden):
+        return forced_choose_max_suit_count(self, forbidden)
+    
+    def discard(self, trump):
+        return discard_lowest_nontrump_rank(self, trump)
+    
+    def play_card(self, trick, trump_suit, lead_suit):
+        card_count = len(self.hand)
+        cards_per_player = {p: card_count for p in range(1, 5)}
+        for player, card in trick:
+            self.other_cards.remove((card.suit, card.rank))
+            cards_per_player[player.nbr] -= 1
+        playable = get_playable_cards(self, trump_suit, lead_suit)
+        if len(playable) == 1:
+            return playable[0]
+        mc_results = []
+        for card in playable:
+            mc_results.append(self.monte_carlo(trick, trump_suit, lead_suit, cards_per_player, card))
+
+    def monte_carlo(self, trick, trump_suit, lead_suit, cards_per_player, card_to_play):
+        partial_deck = [Card(pair[0], pair[1]) for pair in self.other_cards]
+        players = {1: HighWithCaution(1, 3, 0), 2: HighWithCaution(2, 4, 1), 3: HighWithCaution(3, 1, 0), 4: HighWithCaution(4, 2, 0)}
+        
+        # Assign players their cards
+        players[self.nbr].set_hand(self.hand)
+        random.shuffle(partial_deck)
+        for p in range(1, 5):
+            if p == self.nbr: continue
+            card_count = cards_per_player[p]
+            players[p].set_hand(partial_deck[-card_count:])
+            del partial_deck[-card_count:]
+        
+        # Finish the current trick
+        trick.append((players[self.nbr], card_to_play))
+        players[self.nbr].hand.remove(card_to_play)
+        if lead_suit == None:
+            lead_suit = effective_suit(card_to_play, trump_suit)
+        after_me = (self.nbr % 4) + 1
+        left = 4 - len(trick)
+        for i in range(left):
+            p = players[((after_me + i) % 4) + 1]
+            card = p.play_card(trick, trump_suit, lead_suit)
+
+# def play_trick(self, leader_index):
+#     trick = []
+#     lead_suit = None
+#     for i in range(4):
+#         p = self.players[(leader_index + i) % 4]
+#         card = p.play_card(trick, self.trump_suit, lead_suit)
+#         p.hand.remove(card)
+#         trick.append((p, card))
+#         if lead_suit is None:
+#             lead_suit = effective_suit(card, self.trump_suit)
+#         self.logger.log_card_played(p, card)
+
+#     winner = max(trick, key=lambda pc: pc[1].value(self.trump_suit, lead_suit))
+#     self.logger.log_trick_winner(winner[0], winner[1])
+#     return self.players.index(winner[0])
+
+# def play_round(self):
+#     tricks_won = {p.team: 0 for p in self.players}
+#     leader = (self.dealer_index + 1) % 4
+#     for _ in range(5):
+#         leader = self.play_trick(leader)
+#         tricks_won[self.players[leader].team] += 1
+#     return tricks_won
