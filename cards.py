@@ -15,6 +15,14 @@ SAME_COLOR = {
     "Spades": "Clubs",
 }
 
+def effective_suit(card, trump_suit):
+    """
+    Returns the suit a card effectively has for follow-suit purposes.
+    """
+    if card.rank == "J" and SAME_COLOR[card.suit] == trump_suit:
+        return trump_suit
+    return card.suit
+
 class Card:
     def __init__(self, suit, rank):
         self.suit = suit

@@ -78,11 +78,8 @@ class Round:
             card = p.play_card(trick, self.out_of_play, self.trump_suit, lead_suit)
             p.hand.remove(card)
             trick.append((p, card))
-            if not lead_suit:
-                if card.rank == "J" and card.suit == SAME_COLOR[self.trump_suit]:
-                    lead_suit = self.trump_suit
-                else:
-                    lead_suit = card.suit
+            if lead_suit is None:
+                lead_suit = effective_suit(card, self.trump_suit)
             self.logger.log_card_played(p, card)
 
         winner = max(trick, key=lambda pc: pc[1].value(self.trump_suit, lead_suit))

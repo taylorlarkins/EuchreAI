@@ -44,7 +44,7 @@ class Player:
         return random.choice(self.hand)
     
     def play_card(self, trick: list[tuple[int, Card]], out_of_play: list[Card], trump_suit: str, lead_suit: str):
-        playable = [c for c in self.hand if c.suit == lead_suit] or self.hand
+        playable = get_playable_cards(self, trump_suit, lead_suit)
         return random.choice(playable)
 
 ##### ----- HELPERS ----- #####
@@ -64,13 +64,17 @@ def get_current_winner(trick, trump_suit, lead_suit):
             winner_card_value = c_value
     return winner, winner_card
 
-def get_playable_cards(self, trump_suit, lead_suit):
-    playable = [c for c in self.hand if c.suit == lead_suit]
-    for c in self.hand:
-        if c.rank == "J" and c.suit == SAME_COLOR[trump_suit]:
-            playable.append(c)
-            break
-    return playable if playable else None
+def get_playable_cards(self: Player, trump_suit: str, lead_suit: str | None):
+    """
+    Returns a list of cards the player is legally allowed to play.
+    """
+    if lead_suit is None:
+        return list(self.hand)
+    playable = [
+        c for c in self.hand
+        if effective_suit(c, trump_suit) == lead_suit
+    ]
+    return playable if playable else list(self.hand)
 
 ##### ----- CHOOSE TRUMP FUNCTIONS ----- #####
 def choose_ge3(self: Player, upcard: Card, first_round: bool):
@@ -103,7 +107,7 @@ def play_highest_value(self, trump_suit: str, lead_suit: str):
     """
     Play the card with the highest value.
     """
-    playable = [c for c in self.hand if c.suit == lead_suit] or self.hand
+    playable = get_playable_cards(self, trump_suit, lead_suit)
     playable.sort(key=lambda x: x.value(trump_suit, lead_suit), reverse=True)
     return playable[0]
 
@@ -111,7 +115,7 @@ def play_lowest_value(self, trump_suit: str, lead_suit: str):
     """
     Play the card with the lowest value.
     """
-    playable = [c for c in self.hand if c.suit == lead_suit] or self.hand
+    playable = get_playable_cards(self, trump_suit, lead_suit)
     playable.sort(key=lambda x: x.value(trump_suit, lead_suit), reverse=False)
     return playable[0]
 
@@ -120,7 +124,7 @@ def play_lowest_winner(self, trump_suit: str, lead_suit: str, current_winner: Ca
     Play the lowest value card that will beat the current winning card. If no cards
     can win then play the lowest valued card.
     """
-    playable = [c for c in self.hand if c.suit == lead_suit] or self.hand
+    playable = get_playable_cards(self, trump_suit, lead_suit)
     playable.sort(key=lambda x: x.value(trump_suit, lead_suit), reverse=False)
     winner_value = current_winner.value(trump_suit, lead_suit)
     for c in playable:
