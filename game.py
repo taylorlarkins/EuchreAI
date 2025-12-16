@@ -9,7 +9,6 @@ class Round:
         self.trump_suit = None
         self.declaring_team = None
         self.trump_chooser = None
-        self.out_of_play = []
 
     def choose_trump(self, kitty):
         upcard = kitty[0]
@@ -47,7 +46,6 @@ class Round:
                         self.logger.log_final_trump(self.trump_suit, self.trump_chooser)
                         return
                 first_round = False  # move to second round
-                self.out_of_play.append(upcard) # upcard is flipped over
 
             dealer = self.players[self.dealer_index]
             self.trump_suit = dealer.forced_choose_trump(upcard.suit)
@@ -75,7 +73,7 @@ class Round:
         lead_suit = None
         for i in range(4):
             p = self.players[(leader_index + i) % 4]
-            card = p.play_card(trick, self.out_of_play, self.trump_suit, lead_suit)
+            card = p.play_card(trick, self.trump_suit, lead_suit)
             p.hand.remove(card)
             trick.append((p, card))
             if lead_suit is None:
@@ -83,7 +81,6 @@ class Round:
             self.logger.log_card_played(p, card)
 
         winner = max(trick, key=lambda pc: pc[1].value(self.trump_suit, lead_suit))
-        self.out_of_play += [pair[1] for pair in trick]
         self.logger.log_trick_winner(winner[0], winner[1])
         return self.players.index(winner[0])
 

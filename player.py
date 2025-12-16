@@ -6,7 +6,7 @@ class Player:
         self.teammate = teammate
         self.team = team
         self.hand = []
-    
+
     def set_hand(self, cards):
         self.hand = cards
 
@@ -30,6 +30,7 @@ class Player:
         return None
 
     # Override the following methods to create an agent
+
     def choose_trump(self, upcard: Card, first_round: bool):
         if first_round:
             return (True, upcard.suit) if random.random() < 0.5 else (False, None)
@@ -43,7 +44,7 @@ class Player:
     def discard(self, trump: str):
         return random.choice(self.hand)
     
-    def play_card(self, trick: list[tuple[int, Card]], out_of_play: list[Card], trump_suit: str, lead_suit: str):
+    def play_card(self, trick: list[tuple[int, Card]], trump_suit: str, lead_suit: str):
         playable = get_playable_cards(self, trump_suit, lead_suit)
         return random.choice(playable)
 
@@ -156,8 +157,8 @@ class SmartRandom(Player):
     def discard(self, trump):
         return discard_lowest_nontrump_rank(self, trump)
     
-    def play_card(self, trick, out_of_play, trump_suit, lead_suit):
-        return super().play_card(trick, out_of_play, trump_suit, lead_suit)
+    def play_card(self, trick, trump_suit, lead_suit):
+        return super().play_card(trick, trump_suit, lead_suit)
 
 class HighValue(Player):
     def choose_trump(self, upcard, first_round):
@@ -169,7 +170,7 @@ class HighValue(Player):
     def discard(self, trump):
         return discard_lowest_nontrump_rank(self, trump)
     
-    def play_card(self, trick, out_of_play, trump_suit, lead_suit):
+    def play_card(self, trick, trump_suit, lead_suit):
         return play_highest_value(self, trump_suit, lead_suit)
     
 class LowValue(Player):
@@ -182,7 +183,7 @@ class LowValue(Player):
     def discard(self, trump):
         return discard_lowest_nontrump_rank(self, trump)
     
-    def play_card(self, trick, out_of_play, trump_suit, lead_suit):
+    def play_card(self, trick, trump_suit, lead_suit):
         return play_lowest_value(self, trump_suit, lead_suit)
 
 class HighWithCaution(Player):
@@ -195,8 +196,59 @@ class HighWithCaution(Player):
     def discard(self, trump):
         return discard_lowest_nontrump_rank(self, trump)
     
-    def play_card(self, trick, out_of_play, trump_suit, lead_suit):
+    def play_card(self, trick, trump_suit, lead_suit):
         current_winner, current_winning_card = get_current_winner(trick, trump_suit, lead_suit)
         if current_winner != None and current_winner != self.teammate:
             return play_lowest_winner(self, trump_suit, lead_suit, current_winning_card)
         return play_lowest_value(self, trump_suit, lead_suit)
+
+class TeamPlayer(Player):    
+    def reset(self):
+        self.chance_chart = {
+            player : {
+                suit : {
+                    rank : 0 if player == self.nbr else (4/19) if player == 5 else (5/19) for rank in RANKS
+                } for suit in SUITS
+            } for player in range(1, 6)
+        }
+        for card in self.hand:
+            self.chance_chart[self.nbr][card.suit][card.rank] = 1.0
+            for player in range(1, 6):
+                if player != self.nbr:
+                    self.chance_chart[player][card.suit][card.rank] = 0.0
+
+    def pretty_print_chance_chart(self):
+        for player in sorted(self.chance_chart.keys()):
+            print(f"\nPlayer {player}") if player != 5 else print(f"\nKitty")
+            print("-" * 60)
+            header = "Suit".ljust(12) + "".join(rank.rjust(8) for rank in RANKS)
+            print(header)
+            print("-" * len(header))
+
+            for suit in SUITS:
+                row = suit.ljust(12)
+                for rank in RANKS:
+                    value = self.chance_chart[player][suit][rank]
+                    row += f"{value:.3f}".rjust(8)
+                print(row)
+    
+    def update_chance_chart(self, trick):
+        for player, card in trick:
+            other_players = list(range(1, 6))
+            other_players.remove(player)
+            self.chance_chart[player.nbr][card.suit][card.rank] = -1.0
+            for p in other_players:
+                self.chance_chart[p][card.suit][card.rank] = 0.0
+            
+
+    def choose_trump(self, upcard, first_round):
+        return choose_ge3(self, upcard, first_round)
+    
+    def forced_choose_trump(self, forbidden):
+        return forced_choose_max_suit_count(self, forbidden)
+    
+    def discard(self, trump):
+        return discard_lowest_nontrump_rank(self, trump)
+    
+    def play_card(self, trick, trump_suit, lead_suit):
+        pass

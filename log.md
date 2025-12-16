@@ -35,9 +35,14 @@
     <td align="left">Complex agent, major bug fixes</td>
     <td align="center">2.0</td>
   </tr>
+  <tr>
+    <td align="left">12/15</td>
+    <td align="left">Team player agent beginnings</td>
+    <td align="center">2.5</td>
+  </tr>
    <tr>
     <td align="left"><b>TOTAL</b></td>
     <td align="left"></td>
-    <td align="center"><b>10.5</b></td>
+    <td align="center"><b>13.0</b></td>
   </tr>
 </table>
