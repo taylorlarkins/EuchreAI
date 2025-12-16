@@ -202,44 +202,10 @@ class HighWithCaution(Player):
             return play_lowest_winner(self, trump_suit, lead_suit, current_winning_card)
         return play_lowest_value(self, trump_suit, lead_suit)
 
-class TeamPlayer(Player):    
-    def reset(self):
-        self.chance_chart = {
-            player : {
-                suit : {
-                    rank : 0 if player == self.nbr else (4/19) if player == 5 else (5/19) for rank in RANKS
-                } for suit in SUITS
-            } for player in range(1, 6)
-        }
-        for card in self.hand:
-            self.chance_chart[self.nbr][card.suit][card.rank] = 1.0
-            for player in range(1, 6):
-                if player != self.nbr:
-                    self.chance_chart[player][card.suit][card.rank] = 0.0
-
-    def pretty_print_chance_chart(self):
-        for player in sorted(self.chance_chart.keys()):
-            print(f"\nPlayer {player}") if player != 5 else print(f"\nKitty")
-            print("-" * 60)
-            header = "Suit".ljust(12) + "".join(rank.rjust(8) for rank in RANKS)
-            print(header)
-            print("-" * len(header))
-
-            for suit in SUITS:
-                row = suit.ljust(12)
-                for rank in RANKS:
-                    value = self.chance_chart[player][suit][rank]
-                    row += f"{value:.3f}".rjust(8)
-                print(row)
-    
-    def update_chance_chart(self, trick):
-        for player, card in trick:
-            other_players = list(range(1, 6))
-            other_players.remove(player)
-            self.chance_chart[player.nbr][card.suit][card.rank] = -1.0
-            for p in other_players:
-                self.chance_chart[p][card.suit][card.rank] = 0.0
-            
+class TeamPlayer(Player):
+    def __init__(self, number, teammate, team):
+        super().__init__(number, teammate, team)
+        self.chance_chart = ChanceChart(self.nbr, [])
 
     def choose_trump(self, upcard, first_round):
         return choose_ge3(self, upcard, first_round)
@@ -251,4 +217,4 @@ class TeamPlayer(Player):
         return discard_lowest_nontrump_rank(self, trump)
     
     def play_card(self, trick, trump_suit, lead_suit):
-        pass
+        return play_highest_value(self, trump_suit, lead_suit)
