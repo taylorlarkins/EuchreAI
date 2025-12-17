@@ -81,6 +81,12 @@ class Round:
             self.logger.log_card_played(p, card)
 
         winner = max(trick, key=lambda pc: pc[1].value(self.trump_suit, lead_suit))
+        if winner[0].team == 0:
+            self.players[0].tricks_won += 1
+            self.players[2].tricks_won += 1
+        if winner[0].team == 1:
+            self.players[1].tricks_won += 1
+            self.players[3].tricks_won += 1
         self.logger.log_trick_winner(winner[0], winner[1])
         return self.players.index(winner[0])
 

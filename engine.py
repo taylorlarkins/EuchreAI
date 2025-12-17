@@ -34,6 +34,8 @@ class GameEngine:
         )
 
         rnd.choose_trump(kitty)
+        for player in self.players:
+            player.declaring_team = rnd.declaring_team
 
         tricks = rnd.play_round()
         dec_team = rnd.declaring_team
