@@ -55,9 +55,14 @@
     <td align="left">More Monte Carlo agent logic</td>
     <td align="center">1.0</td>
   </tr>
+  <tr>
+    <td align="left">12/17</td>
+    <td align="left">Finishing up Monte Carlo agent, experimenting/agent comparison, project report</td>
+    <td align="center">3.0</td>
+  </tr>
    <tr>
     <td align="left"><b>TOTAL</b></td>
     <td align="left"></td>
-    <td align="center"><b>17.4</b></td>
+    <td align="center"><b>20.4</b></td>
   </tr>
 </table>

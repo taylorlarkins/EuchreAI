@@ -33,7 +33,7 @@ class Player:
         return None
 
     # Agents may use this function to perform actions after receiving their hand
-    def reset():
+    def reset(self):
         pass
 
     # Override the following methods to create an agent
@@ -212,11 +212,11 @@ class HighWithCaution(Player):
 class MonteCarlo(Player):
     def __init__(self, number, teammate, team):
         super().__init__(number, teammate, team)
-        self.other_cards = list(itertools.product(SUITS, RANKS))
 
     def reset(self):
+        self.other_cards = set(itertools.product(SUITS, RANKS))
         for card in self.hand:
-            self.other_cards.remove((card.suit, card.rank))
+            self.other_cards.discard((card.suit, card.rank))
     
     def choose_trump(self, upcard, first_round):
         # TODO: Make this a Monte Carlo process
@@ -230,12 +230,11 @@ class MonteCarlo(Player):
         # TODO: Maybe make this a Monte Carlo process?
         return discard_lowest_nontrump_rank(self, trump)
     
-    # TODO: Debug this
     def play_card(self, trick, trump_suit, lead_suit):
         card_count = len(self.hand)
         cards_per_player = {p: card_count for p in range(1, 5)}
         for player, card in trick:
-            self.other_cards.remove((card.suit, card.rank))
+            self.other_cards.discard((card.suit, card.rank))
             cards_per_player[player.nbr] -= 1
         playable = get_playable_cards(self, trump_suit, lead_suit)
         if len(playable) == 1:
@@ -244,62 +243,68 @@ class MonteCarlo(Player):
         trick_wins = {self.team: self.tricks_won, 1 - self.team: 5 - len(self.hand) - self.tricks_won}
         for card in playable:
             mc_results.append(self.monte_carlo(trick, trump_suit, lead_suit, cards_per_player, card, trick_wins))
+        max_index = mc_results.index(max(mc_results))
+        return playable[max_index]
 
     def monte_carlo(self, trick, trump_suit, lead_suit, cards_per_player, card_to_play, trick_wins):
         partial_deck = [Card(pair[0], pair[1]) for pair in self.other_cards]
         players = {1: HighWithCaution(1, 3, 0), 2: HighWithCaution(2, 4, 1), 3: HighWithCaution(3, 1, 0), 4: HighWithCaution(4, 2, 0)}
         score_sum = 0
         for _ in range(1000):
+            sim_trick = trick.copy()
+            sim_lead_suit = lead_suit
+            sim_trick_wins = trick_wins.copy()
             # Assign players their cards
-            players[self.nbr].set_hand(self.hand)
+            players[self.nbr].set_hand(self.hand.copy())
             pdc = partial_deck.copy()
             random.shuffle(pdc)
             for p in range(1, 5):
                 if p == self.nbr: continue
                 card_count = cards_per_player[p]
-                players[p].set_hand(pdc[-card_count:])
+                players[p].set_hand(pdc[-card_count:].copy())
                 del pdc[-card_count:]
             
             # Finish the current trick
-            if trick:
-                leader_index = trick[0][0].nbr
-            else:
-                leader_index = self.nbr
-            
-            trick.append((players[self.nbr], card_to_play))
-            players[self.nbr].hand.remove(card_to_play)
-            if lead_suit == None:
-                lead_suit = effective_suit(card_to_play, trump_suit)
-            left = 4 - len(trick)
-            for i in range(1, left + 1):
-                p = players[((leader_index + i) % 4) + 1]
-                card = p.play_card(trick, trump_suit, lead_suit)
+            for card in players[self.nbr].hand:
+                if card.suit == card_to_play.suit and card.rank == card_to_play.rank:
+                    sim_trick.append((players[self.nbr], card))
+                    players[self.nbr].hand.remove(card)
+                    break
+            if sim_lead_suit == None:
+                sim_lead_suit = effective_suit(card_to_play, trump_suit)
+            left = 4 - len(sim_trick)
+            prev_index = self.nbr
+            for _ in range(left):
+                p = players[(prev_index % 4) + 1]
+                card = p.play_card(sim_trick, trump_suit, sim_lead_suit)
                 p.hand.remove(card)
-                trick.append((p, card))
-            winner = max(trick, key=lambda pc: pc[1].value(trump_suit, lead_suit))
-            trick_wins[winner[0].team] += 1
-            leader_index = winner[0].nbr
+                sim_trick.append((p, card))
+                prev_index = p.nbr
+            winner = max(sim_trick, key=lambda pc: pc[1].value(trump_suit, sim_lead_suit))
+            sim_trick_wins[winner[0].team] += 1
+            next_index = winner[0].nbr
 
             # Play remaining tricks
             tricks_remaining = len(players[1].hand)
             for _ in range(tricks_remaining):
-                trick = []
-                lead_suit = None
-                for i in range(4):
-                    p = players[((leader_index + i) % 4) + 1]
-                    card = p.play_card(trick, trump_suit, lead_suit)
+                sim_trick = []
+                sim_lead_suit = None
+                for _ in range(4):
+                    p = players[next_index]
+                    card = p.play_card(sim_trick, trump_suit, sim_lead_suit)
                     p.hand.remove(card)
-                    trick.append((p, card))
-                    if lead_suit is None:
-                        lead_suit = effective_suit(card, trump_suit)
-                winner = max(trick, key=lambda pc: pc[1].value(trump_suit, lead_suit))
-                trick_wins[winner[0].team] += 1
-                leader_index = winner[0].nbr
+                    sim_trick.append((p, card))
+                    if sim_lead_suit is None:
+                        sim_lead_suit = effective_suit(card, trump_suit)
+                    next_index = (next_index % 4) + 1
+                winner = max(sim_trick, key=lambda pc: pc[1].value(trump_suit, sim_lead_suit))
+                sim_trick_wins[winner[0].team] += 1
+                next_index = winner[0].nbr
             
             # Determine outcome
             dec_team = self.declaring_team
             opp_team = 1 - dec_team
-            dec_tricks = trick_wins[dec_team]
+            dec_tricks = sim_trick_wins[dec_team]
             scores = {0: 0, 1: 0}
             if dec_tricks >= 3:
                 scores[dec_team] += 1 if dec_tricks < 5 else 2

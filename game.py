@@ -88,7 +88,7 @@ class Round:
             self.players[1].tricks_won += 1
             self.players[3].tricks_won += 1
         self.logger.log_trick_winner(winner[0], winner[1])
-        return self.players.index(winner[0])
+        return winner[0].nbr - 1
 
     def play_round(self):
         tricks_won = {p.team: 0 for p in self.players}
